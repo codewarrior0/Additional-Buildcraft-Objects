@@ -28,11 +28,7 @@ public class ItemIconProvider implements IIconProvider {
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerIcons(IIconRegister iconRegister) {
-        if(ABO.blockLiquidXP != null) {
-            _icons = new IIcon[MAX];
-        }else {
-            _icons = new IIcon[MAX - 1];
-        }
+		_icons = new IIcon[MAX - 1];
 
 		_icons[ActionSwitchOnPipe] = iconRegister
 				.registerIcon("additional-buildcraft-objects:actions/ActionSwitchOnPipe");
@@ -40,11 +36,6 @@ public class ItemIconProvider implements IIconProvider {
 				.registerIcon("additional-buildcraft-objects:actions/ActionToggleOnPipe");
 		_icons[ActionToggleOffPipe] = iconRegister
 				.registerIcon("additional-buildcraft-objects:actions/ActionToggleOffPipe");
-
-        if(ABO.blockLiquidXP != null) {
-            _icons[bucket] = iconRegister
-                    .registerIcon("liquidxp:bucket");
-        }
 
     }
 }

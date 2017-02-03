@@ -41,14 +41,6 @@ public class ABOProxyClient extends ABOProxy {
 
         PipeTransportRenderer.RENDERER_MAP.put(PipeTransportFluidsReinforced.class, renderer);
 
-        if(ABO.blockLiquidXP != null){
-            try {
-                //ABO.bucket.registerIcons();
-
-            } catch(Throwable t){
-                ABO.aboLog.info("You are running Cauldron or some shit that doesn't have Minecraft.class, some things won't work right due to their DMCA takedown.");
-            }
-        }
 		//RenderingEntityBlocks.blockByEntityRenders.put(new EntityRenderIndex(ABO.waterwheelBlock, 0),
 		//		new RenderWaterwheel());
 	}

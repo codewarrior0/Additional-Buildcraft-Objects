@@ -52,12 +52,9 @@ import da3dsoul.scaryGen.blocks.BlockSandStone;
 import da3dsoul.scaryGen.blocks.ItemSandStone;
 import da3dsoul.scaryGen.generate.BiomeStoneGen;
 import da3dsoul.scaryGen.generate.ChunkProviderScary;
-import da3dsoul.scaryGen.generate.GeostrataGen.Ore.COFH.COFHOverride;
 import da3dsoul.scaryGen.generate.WorldTypeScary;
 import da3dsoul.scaryGen.items.ItemBottle;
 import da3dsoul.scaryGen.items.ItemGoldenStaff;
-import da3dsoul.scaryGen.liquidXP.BlockLiquidXP;
-import da3dsoul.scaryGen.liquidXP.WorldGenXPLake;
 import da3dsoul.scaryGen.projectile.EntityThrownBottle;
 import mods.railcraft.common.util.misc.Game;
 import net.minecraft.block.Block;
@@ -143,18 +140,6 @@ public class ABO{
     public static boolean geostrataInstalled = false;
     public static boolean cofhInstalled = false;
 
-    // LiquidXP
-    public static BlockLiquidXP blockLiquidXP;
-    public static Item bucket;
-    public static boolean spawnLakes = true;
-    public static boolean respawnLakes = false;
-    public static boolean spawnOrbs = true;
-    public static int orbSpawnChance = 70;
-    public static int orbLifetime = 50;
-    public static int orbSize = 5;
-    public static DamageSource experience = (new DamageSource("experience")).setDamageBypassesArmor().setMagicDamage().setDamageIsAbsolute();
-    // LiquidXP
-
     public static int actionSwitchOnPipeID = 128;
     public static IActionInternal actionSwitchOnPipe = null;
     public static int actionToggleOnPipeID = 129;
@@ -178,7 +163,6 @@ public class ABO{
     // Mod Init Handling
     private boolean bucketEventCanceled = false;
     private EnderInventorySaveHandler enderInventorySaveHandler = null;
-    public static Block brickNoCrossing;
 
     // Start
 
@@ -196,11 +180,6 @@ public class ABO{
         geostrataInstalled = Loader.isModLoaded("GeoStrata");
         cofhInstalled = Loader.isModLoaded("CoFHCore");
 
-        if(ABO.geostrataInstalled && ABO.cofhInstalled) {
-            ABO.aboLog.info("COFH is Loaded");
-            COFHOverride.overrideCOFHWordGen(0);
-        }
-
         try {
             initFluidCapacities();
 
@@ -211,13 +190,6 @@ public class ABO{
 
             windmillAnimations = aboConfiguration.get("Windmills", "WindmillAnimations", true).getBoolean(true);
             windmillAnimDist = aboConfiguration.get("Windmills", "WindmillAnimationDistance", 64).getInt();
-
-            spawnLakes = aboConfiguration.get("LiquidXP", "SpawnExperienceLakes", spawnLakes).getBoolean();
-            respawnLakes = aboConfiguration.get("LiquidXP", "RespawnExperienceLakes", respawnLakes).getBoolean();
-            spawnOrbs = aboConfiguration.get("LiquidXP", "SpawnExperienceOrbs", spawnOrbs).getBoolean();
-            orbSpawnChance = aboConfiguration.get("LiquidXP", "ExperienceOrbSpawnChance", orbSpawnChance).getInt();
-            orbLifetime = aboConfiguration.get("LiquidXP", "ExperienceOrbLifetime", orbLifetime).getInt();
-            orbSize = aboConfiguration.get("LiquidXP", "ExperienceOrbSize", orbSize).getInt();
 
             windmillScalar = aboConfiguration.get("Windmills", "WindmillEnergyScalar", 1.0).getDouble();
             waterwheelScalar = aboConfiguration.get("Windmills", "WaterwheelEnergyScalar", 1.0).getDouble();
@@ -290,13 +262,6 @@ public class ABO{
 
             acceleratorBlock = new BlockAccelerator().setBlockName("blockAccelerator");
 
-            if (Loader.isModLoaded("LiquidXP")) {
-                BlockLiquidXP.preinit();
-                GameRegistry.registerBlock(blockLiquidXP, "blockLiquidXP").setBlockName("blockLiquidXP");
-            } else {
-                blockLiquidXP = null;
-            }
-
             sandStone = (new BlockSandStone()).setStepSound(Block.soundTypePiston).setHardness(0.8F).setBlockName("sandStone").setBlockTextureName("sandstone");
 
             ItemBlock sandStoneItem = (new ItemMultiTexture(sandStone, sandStone, BlockSandStone.iconNames)).setUnlocalizedName("sandStone");
@@ -315,11 +280,6 @@ public class ABO{
                     new Object[]{"ABA", "ACA", "DED", 'A', BuildCraftCore.ironGearItem,
                             'B', BuildCraftCore.diamondGearItem, 'C', Items.clock, 'D', Blocks.stone, 'E', Items.redstone});
 
-            brickNoCrossing = (new BlockNoCrossing(Material.rock)).setHardness(2.0F).setResistance(10.0F).setStepSound(Block.soundTypePiston).setBlockName("brickNoCrossing").setCreativeTab(CreativeTabs.tabBlock).setBlockTextureName("brick");
-
-            GameRegistry.registerBlock(brickNoCrossing, "brickNoCrossing");
-            addFullRecipe(new ItemStack(ABO.brickNoCrossing), new Object[] { "#", '#', new ItemStack(Blocks.brick_block) });
-            addFullRecipe(new ItemStack(Blocks.brick_block), new Object[] { "#", '#', new ItemStack(ABO.brickNoCrossing) });
             GameRegistry.registerBlock(blockNull, "null");
             GameRegistry.registerBlock(blockNullCollide, "nullCollide");
             addFullRecipe(new ItemStack(windmillBlock),
@@ -422,10 +382,6 @@ public class ABO{
         }
 
         loadRecipes();
-
-        if (blockLiquidXP != null) {
-            BlockLiquidXP.init();
-        }
 
         ABOProxy.proxy.registerTileEntities();
         ABOProxy.proxy.registerBlockRenderers();
@@ -533,125 +489,11 @@ public class ABO{
         }
     }
 
-
-    @SubscribeEvent
-    public void populate(PopulateChunkEvent.Populate event) {
-        if (ABO.blockLiquidXP == null) return;
-        if(event.hasVillageGenerated) return;
-        if(event.type != PopulateChunkEvent.Populate.EventType.LAKE) return;
-        if (!spawnLakes) return;
-        if (!respawnLakes) return;
-        if (event.rand.nextInt(16) == 0
-                && TerrainGen.populate(event.chunkProvider, event.world, event.rand, event.chunkX, event.chunkZ, event.hasVillageGenerated, PopulateChunkEvent.Populate.EventType.LAKE)) {
-            int k1 = event.chunkX + event.rand.nextInt(16) + 8;
-            int l1 = 45 + event.rand.nextInt(211);
-            int i2 = event.chunkZ + event.rand.nextInt(16) + 8;
-            if (event.world.getWorldInfo().getVanillaDimension() != -1) {
-                new WorldGenXPLake().generate(event.world, event.rand, k1, l1, i2);
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void decorate(DecorateBiomeEvent.Decorate event) {
-        if (ABO.blockLiquidXP == null) return;
-        if (!spawnLakes) return;
-        if (respawnLakes) return;
-        if (event.type != DecorateBiomeEvent.Decorate.EventType.LAKE) return;
-        if (event.rand.nextInt(16) == 0
-                && TerrainGen.decorate(event.world, event.rand, event.chunkX, event.chunkZ, event.type)) {
-            int k1 = event.chunkX + event.rand.nextInt(16) + 8;
-            int l1 = 45 + event.rand.nextInt(211);
-            int i2 = event.chunkZ + event.rand.nextInt(16) + 8;
-            if (event.world.getWorldInfo().getVanillaDimension() != -1) {
-                new WorldGenXPLake().generate(event.world, event.rand, k1, l1, i2);
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void playerUpdate(LivingEvent.LivingUpdateEvent event) {
-        if (ABO.blockLiquidXP != null) {
-            if (event.entityLiving instanceof EntityPlayer) {
-                EntityPlayer player = (EntityPlayer) event.entityLiving;
-
-                int L = player.experienceLevel;
-                int x = (int) Math.floor(player.posX);
-                int y = (int) Math.floor(player.posY);
-                int z = (int) Math.floor(player.posZ);
-                if (y < 256 && y > 0) {
-                    if (blockLiquidXP.isInXP(player)) {
-                        int quanta = blockLiquidXP.getGreatestQuantaValue(player);
-                        if (player.ticksExisted % 20 == 0) {
-                            if (!player.capabilities.isCreativeMode) {
-                                int targetLevel = blockLiquidXP.getLevelTarget(player.worldObj, x, y, z, quanta);
-                                if (L < targetLevel) {
-                                    player.attackEntityFrom(experience, targetLevel - L);
-                                }
-                                player.addExhaustion(1.0F);
-                            }
-                        }
-                        if (player.isDead) return;
-                        if (player.worldObj.rand.nextInt(100) == 0) {
-                            if (blockLiquidXP.useXP(player.worldObj, x, y, z)) {
-                                player.addExperience(1000);
-                                if (!player.worldObj.isRemote)
-                                    player.worldObj.playSoundEffect(x + 0.5, y + 0.5, z + 0.5, "random.orb", 0.1F, 0.5F * ((player.worldObj.rand.nextFloat() - player.worldObj.rand.nextFloat()) * 0.7F + 1.8F));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if(!event.entity.worldObj.isRemote) {
-            if (!(event.entityLiving instanceof EntityPlayer)) {
-                EntityLivingBase entity = event.entityLiving;
-                World world = entity.worldObj;
-                int x = MathHelper.floor_double(entity.posX);
-                int y = MathHelper.floor_double(entity.boundingBox.minY);
-                int z = MathHelper.floor_double(entity.posZ);
-                for(int i =0; i < 3;i++) {
-                    if (world.getBlock(x, y, z) == brickNoCrossing) {
-                        for (int f = 2; f < 6; f++) {
-                            int y1 = 0;
-                            boolean nextBrick = false;
-                            for(int j = -3; j < 3; j++) {
-                                Block block = world.getBlock(x + Facing.offsetsXForSide[f], y + j, z + Facing.offsetsZForSide[f]);
-                                if(block == brickNoCrossing) {
-                                    nextBrick = true;
-                                    y1 = j;
-                                    break;
-                                }
-                            }
-                            if (!nextBrick) {
-                                for(int j = y1; j < 3; j++) {
-                                    if (!world.getBlock(x + Facing.offsetsXForSide[f], y + j, z + Facing.offsetsZForSide[f]).getMaterial().blocksMovement()) {
-                                        double blockX = x + Facing.offsetsXForSide[f] + 0.5D + Facing.offsetsXForSide[f] * (entity.boundingBox.maxX - entity.boundingBox.minX) / 2;
-                                        double blockY = y + j;
-                                        double blockZ = z + Facing.offsetsZForSide[f] + 0.5D + Facing.offsetsZForSide[f] * (entity.boundingBox.maxZ - entity.boundingBox.minZ) / 2;
-                                        entity.setPosition(blockX, blockY + entity.yOffset, blockZ);
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    y--;
-                }
-            }
-        }
-    }
-
     @SubscribeEvent
     public void onRightClick(PlayerInteractEvent event) {
         if(event.world.isRemote) return;
         if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
             if (event.entityLiving instanceof EntityPlayer) {
-                if (ABO.blockLiquidXP != null) {
-                    if (BlockLiquidXP.onTryToUseBottle((EntityPlayer) event.entityLiving, event.x, event.y, event.z, event.face)) {
-                        bucketEventCanceled = true;
-                    }
-                }
                 if (event.entityPlayer.inventory.getCurrentItem() != null && event.entityPlayer.inventory.getCurrentItem().getItem() == Items.dye && event.entityPlayer.inventory.getCurrentItem().getItemDamage() == 15) {
                     Block var5 = event.world.getBlock(event.x, event.y, event.z);
                     World world = event.world;
@@ -747,23 +589,10 @@ public class ABO{
                 }
             }
 
-            if (blockLiquidXP != null) {
-                if (BlockLiquidXP.onTryToUseBottle((EntityPlayer) event.entityLiving, event.x, event.y, event.z, event.face)) {
-                    bucketEventCanceled = true;
-                }
-            }
             if (bucketEventCanceled) {
                 event.setCanceled(true);
                 bucketEventCanceled = false;
             }
-        }
-    }
-
-    @SideOnly(Side.CLIENT)
-    @SubscribeEvent
-    public void onTextureStitchPre(TextureStitchEvent.Pre event) {
-        if (ABO.blockLiquidXP != null) {
-            BlockLiquidXP.initAprilFools(event);
         }
     }
 

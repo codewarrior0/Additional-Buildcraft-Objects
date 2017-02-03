@@ -7,11 +7,6 @@ import abo.ABO;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
-import da3dsoul.scaryGen.generate.GeostrataGen.Ore.COFH.COFHOverride;
-import da3dsoul.scaryGen.generate.GeostrataGen.Ore.Galacticraft.GalactiCraftHandler;
-import da3dsoul.scaryGen.generate.GeostrataGen.Ore.ProjectRed.ProjectRedHandler;
-import da3dsoul.scaryGen.generate.GeostrataGen.Ore.Reika.ReactorCraft.ReactorOreGeneratorOverride;
-import da3dsoul.scaryGen.generate.GeostrataGen.Ore.WorldGenMinableOverride;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.entity.EnumCreatureType;
@@ -151,33 +146,7 @@ public class ChunkProviderScary implements IChunkProvider {
                 HashMap<IWorldGenerator, Integer> toAdd = new HashMap<IWorldGenerator, Integer>();
                 int j = 0;
                 ABO.aboLog.info("GeoStrata is " + (ABO.geostrataInstalled ? "" : "not ") + "Installed");
-                do {
-                    if (!ABO.geostrataInstalled) break;
-                    if (!it.hasNext()) break;
-                    IWorldGenerator gen = it.next();
-                    if (gen.getClass().getSimpleName().equalsIgnoreCase("RockGenerator")) {
-                        j++;
-                        iWorldGeneratorIntegerMap.remove(gen);
-                        it.remove();
-                        continue;
-                    }
-                    if (gen.getClass().getSimpleName().equalsIgnoreCase("ReactorOreGenerator")) {
-                        j++;
-                        toAdd.put(ReactorOreGeneratorOverride.instance, iWorldGeneratorIntegerMap.get(gen));
-                        iWorldGeneratorIntegerMap.remove(gen);
-                        it.remove();
-                    }
-                    if (gen.getClass().getSimpleName().equalsIgnoreCase("OverworldGenerator")) {
-                        j++;
-                        iWorldGeneratorIntegerMap.remove(gen);
-                        it.remove();
-                        GalactiCraftHandler.addGeneratorOverrides(toAdd);
-                    }
 
-                    if (gen.getClass().getSimpleName().equalsIgnoreCase("SimpleGenHandler") || gen.getClass().getSimpleName().equalsIgnoreCase("SimpleGenHandler$")) {
-                        ProjectRedHandler.override(gen);
-                    }
-                } while (true);
 
                 ABO.aboLog.info("Unregistered " + j + " ore " + (j > 1 ? "generators" : "generator") + " from World Generation");
 
@@ -198,25 +167,7 @@ public class ChunkProviderScary implements IChunkProvider {
                 ABO.aboLog.warn("Unable to modify ore gen for scaryGen");
                 t.printStackTrace();
             }
-            if(ABO.geostrataInstalled) {
-                try {
-                    for(BiomeGenBase biome : BiomeGenBase.getBiomeGenArray()) {
-                        if(biome != null && biome.theBiomeDecorator != null) {
-                            biome.theBiomeDecorator.coalGen = new WorldGenMinableOverride(Blocks.coal_ore, 16);
-                            biome.theBiomeDecorator.ironGen = new WorldGenMinableOverride(Blocks.iron_ore, 8);
-                            biome.theBiomeDecorator.goldGen = new WorldGenMinableOverride(Blocks.gold_ore, 8);
-                            biome.theBiomeDecorator.redstoneGen = new WorldGenMinableOverride(Blocks.redstone_ore, 7);
-                            biome.theBiomeDecorator.diamondGen = new WorldGenMinableOverride(Blocks.diamond_ore, 7);
-                            biome.theBiomeDecorator.lapisGen = new WorldGenMinableOverride(Blocks.lapis_ore, 6);
-                            ABO.aboLog.info("Replaced ore gen for " + biome.biomeName + " with geoStrata custom ore gen");
-                        }
-                    }
 
-                }catch (Throwable e) {
-                    e.printStackTrace();
-                }
-
-            }
         }
     }
 
