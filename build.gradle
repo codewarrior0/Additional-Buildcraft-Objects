@@ -20,6 +20,12 @@ buildscript {
 
 apply plugin: 'forge'
 
+file "build.properties" withReader {
+    def prop = new Properties()
+    prop.load(it)
+    ext.config = new ConfigSlurper().parse prop
+}
+
 version = "MC1.7.10-BC7.1release" + "4.0.9"
 group= "abo" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "ABO"
@@ -44,6 +50,22 @@ repositories {
         name "BuildCraft"
         artifactPattern "http://www.mod-buildcraft.com/releases/BuildCraft/[revision]/[module]-[revision]-[classifier].[ext]"
     }
+    ivy {
+        name 'CoFHLib'
+        artifactPattern "http://addons-origin.cursecdn.com/files/${config.cofhlib.cf}/[module]-[revision].[ext]"
+    }
+    ivy {
+        name 'CoFHCore'
+        artifactPattern "http://addons-origin.cursecdn.com/files/${config.cofhcore.cf}/[module]-[revision].[ext]"
+    }
+    ivy {
+        name 'Railcraft'
+        artifactPattern "http://addons-origin.cursecdn.com/files/${config.railcraft.cf}/[module]_[revision].[ext]"
+    }
+    ivy {
+        name 'DragonAPI'
+        artifactPattern "http://addons-origin.cursecdn.com/files/${config.dragonapi_cf}/[module]%20[revision].[ext]"
+    }
 }
 
 dependencies {
@@ -56,14 +78,19 @@ dependencies {
     //if buildcraft maven is not updated again, replace this with buildcraft-version-dev and uncomment it
     //compile name: 'buildcraft-7.1.15-dev'
     //if buildcraft maven is not updated, comment out this line
-    //compile name: 'buildcraft', version: '7.1.15', classifier: "dev", ext: 'jar'
+    compile name: 'buildcraft', version: '7.1.15', classifier: "dev", ext: 'jar'
     //compile "com.mod-buildcraft:buildcraft:7.1.15:dev"
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
+    // http://addons.cursecdn.com/files/2212/893/CoFHLib-[1.7.10]1.0.0B6-dev-26.jar
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
+    compile name: 'CoFHLib', version: config.cofhlib.version, ext: 'jar'
+    compile name: 'CoFHCore', version: config.cofhcore.version, ext: 'jar'
+    compile name: 'Railcraft', version: config.railcraft.version, ext: 'jar'
+    // compile name: 'DragonAPI', version: config.rotarycraft_version, ext: 'jar'
+    // compile name: 'liquid-xp-59.0.2'
 }
 
 processResources
